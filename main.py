@@ -36,15 +36,14 @@ from editing.file_writer import apply_changes
 # =====================================
 
 EDIT_KEYWORDS = [
-    "edit",
-    "fix",
-    "update",
-    "change",
-    "refactor",
-    "modify",
-    "rewrite",
-    "correct",
-    "replace"
+    "edit file",
+    "fix bug",
+    "update file",
+    "modify file",
+    "rewrite file",
+    "patch",
+    "refactor code",
+    "change implementation"
 ]
 
 
