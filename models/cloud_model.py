@@ -1,11 +1,13 @@
 from openai import OpenAI
-
+from dotenv import load_dotenv
 from config import (
     OPENROUTER_API_KEY,
     CLOUD_MODEL
 )
 
 from tracing.debug import trace
+
+load_dotenv()
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",

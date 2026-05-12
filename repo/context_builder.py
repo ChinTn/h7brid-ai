@@ -1,10 +1,6 @@
-from repo.retrieval import (
-    retrieve_relevant_files
-)
-
-from repo.repo_summary import (
-    build_repo_summary
-)
+from repo.retrieval import retrieve_relevant_files
+from repo.repo_summary import build_repo_summary
+from repo.mode_classifier import classify_mode
 
 from memory.memory_manager import (
     get_recent_messages,
@@ -15,81 +11,20 @@ from memory.memory_manager import (
 
 from tracing.debug import trace
 
-from models.local_model import local_chat
-
 
 # =====================================
-# MODE TRANSITION CLASSIFIER
+# MODE TRANSITION
 # =====================================
 
 def determine_next_mode(prompt):
 
-    current_mode = get_current_mode()
+    trace(f"Current mode: {get_current_mode()}")
 
-    trace(f"Current mode: {current_mode}")
+    result = classify_mode(prompt)
 
-    system_prompt = f"""
-You are an AI orchestration mode controller.
+    trace(f"Embedding classifier decided: {result}")
 
-Current mode:
-{current_mode}
-
-Available modes:
-- CHAT
-- REPO
-
-CHAT mode means:
-- casual conversation
-- general questions
-- greetings
-- non-technical discussion
-
-REPO mode means:
-- repository analysis
-- code understanding
-- debugging
-- architecture discussion
-- backend/frontend discussion
-- file explanation
-- software engineering discussion
-
-Your job:
-Determine whether the assistant should:
-- remain in current mode
-- transition to another mode
-
-Rules:
-- preserve conversational continuity
-- preserve repository workflows
-- avoid unnecessary repo activation
-- casual followups should remain CHAT
-- technical followups should remain REPO
-
-Reply ONLY:
-CHAT
-or
-REPO
-"""
-
-    response = local_chat([
-        {
-            "role": "system",
-            "content": system_prompt
-        },
-        {
-            "role": "user",
-            "content": prompt
-        }
-    ])
-
-    result = response["message"]["content"] \
-        .strip() \
-        .upper()
-
-    if "REPO" in result:
-        return "REPO"
-
-    return "CHAT"
+    return result
 
 
 # =====================================
@@ -102,13 +37,7 @@ def build_context(user_prompt):
 
     messages = []
 
-    # =====================================
-    # MODE TRANSITION
-    # =====================================
-
-    next_mode = determine_next_mode(
-        user_prompt
-    )
+    next_mode = determine_next_mode(user_prompt)
 
     set_current_mode(next_mode)
 
@@ -191,9 +120,7 @@ CONVERSATION SUMMARY:
     # RECENT MEMORY
     # =====================================
 
-    messages.extend(
-        get_recent_messages()
-    )
+    messages.extend(get_recent_messages())
 
     # =====================================
     # REPO RETRIEVAL
@@ -203,9 +130,7 @@ CONVERSATION SUMMARY:
 
     if use_repo_context:
 
-        relevant_files = retrieve_relevant_files(
-            user_prompt
-        )
+        relevant_files = retrieve_relevant_files(user_prompt)
 
         for file in relevant_files:
 
