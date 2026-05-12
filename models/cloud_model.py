@@ -4,7 +4,7 @@ from config import (
     OPENROUTER_API_KEY,
     CLOUD_MODEL
 )
-
+import os
 from tracing.debug import trace
 
 load_dotenv()

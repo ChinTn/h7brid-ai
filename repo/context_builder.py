@@ -1,11 +1,14 @@
-from repo.retrieval import retrieve_relevant_files
-from repo.repo_summary import build_repo_summary
-from repo.mode_classifier import classify_mode
+from repo.retrieval import (
+    retrieve_relevant_files
+)
+
+from repo.mode_classifier import (
+    classify_mode
+)
 
 from memory.memory_manager import (
     get_recent_messages,
     conversation_summary,
-    get_current_mode,
     set_current_mode
 )
 
@@ -13,16 +16,14 @@ from tracing.debug import trace
 
 
 # =====================================
-# MODE TRANSITION
+# MODE
 # =====================================
 
 def determine_next_mode(prompt):
 
-    trace(f"Current mode: {get_current_mode()}")
-
     result = classify_mode(prompt)
 
-    trace(f"Embedding classifier decided: {result}")
+    trace(f"Mode: {result}")
 
     return result
 
@@ -33,104 +34,77 @@ def determine_next_mode(prompt):
 
 def build_context(user_prompt):
 
-    trace("Building AI context")
-
     messages = []
 
-    next_mode = determine_next_mode(user_prompt)
+    next_mode = determine_next_mode(
+        user_prompt
+    )
 
     set_current_mode(next_mode)
 
-    trace(f"Transitioned to mode: {next_mode}")
-
-    use_repo_context = next_mode == "REPO"
+    use_repo_context = \
+        next_mode == "REPO"
 
     # =====================================
-    # REPO MODE
+    # SYSTEM PROMPT
     # =====================================
 
     if use_repo_context:
 
-        trace("Repo-aware mode enabled")
-
-        repo_summary = build_repo_summary()
-
         messages.append({
             "role": "system",
-            "content": f"""
+            "content": """
 You are a repository-aware AI coding assistant.
 
-The user is INSIDE their repository.
+The repository has already been indexed.
 
-You already have:
+You understand:
 - repository structure
-- architecture understanding
-- repository context
-- relevant source files
+- repository files
+- semantic relationships
+- project architecture
 
-NEVER ask the user to paste code
-if repository context already exists.
-
-Your job:
-- analyze repositories
-- debug issues
-- explain architecture
-- modify code
-- reason about project structure
-
-REPOSITORY SUMMARY:
-
-{repo_summary}
+Do NOT ask user to paste code.
 """
         })
 
-    # =====================================
-    # CHAT MODE
-    # =====================================
-
     else:
-
-        trace("Normal assistant mode enabled")
 
         messages.append({
             "role": "system",
             "content": """
-You are a helpful conversational AI assistant.
-
-Respond naturally.
+You are a helpful AI assistant.
 """
         })
 
     # =====================================
-    # MEMORY SUMMARY
+    # MEMORY
     # =====================================
 
     if conversation_summary:
 
         messages.append({
             "role": "system",
-            "content": f"""
-CONVERSATION SUMMARY:
-
-{conversation_summary}
-"""
+            "content":
+            conversation_summary
         })
 
-    # =====================================
-    # RECENT MEMORY
-    # =====================================
-
-    messages.extend(get_recent_messages())
+    messages.extend(
+        get_recent_messages()
+    )
 
     # =====================================
-    # REPO RETRIEVAL
+    # REPO CONTEXT
     # =====================================
 
     repo_context = ""
 
     if use_repo_context:
 
-        relevant_files = retrieve_relevant_files(user_prompt)
+        relevant_files = \
+            retrieve_relevant_files(
+                user_prompt
+            )
 
         for file in relevant_files:
 
@@ -140,23 +114,21 @@ FILE:
 {file['path']}
 
 CONTENT:
-{file['content']}
+{file['content'][:4000]}
 
 """
 
     # =====================================
-    # USER REQUEST
+    # USER MESSAGE
     # =====================================
 
     if use_repo_context:
 
         user_content = f"""
 USER REQUEST:
-
 {user_prompt}
 
-RELEVANT REPOSITORY CONTEXT:
-
+REPOSITORY CONTEXT:
 {repo_context}
 """
 

@@ -9,6 +9,10 @@ from tracing.debug import (
 )
 
 
+from repo.repo_indexer import (
+    build_repo_index
+)
+
 from memory.memory_manager import get_current_mode
 
 from models.classifier import classify_prompt
@@ -28,6 +32,7 @@ from editing.patch_generator import generate_patch
 from editing.diff_viewer import show_diff
 from editing.file_writer import apply_changes
 
+
 # =====================================
 # EDIT REQUEST DETECTION
 # =====================================
@@ -44,6 +49,7 @@ EDIT_KEYWORDS = [
     "replace"
 ]
 
+
 def is_edit_request(prompt):
 
     lower_prompt = prompt.lower()
@@ -52,6 +58,7 @@ def is_edit_request(prompt):
         keyword in lower_prompt
         for keyword in EDIT_KEYWORDS
     )
+
 
 # =====================================
 # MAIN
@@ -62,6 +69,12 @@ def main():
     print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     print("🧠 HYBRID REPO AI AGENT")
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+    print("\n📦 Loading repository memory...\n")
+
+    build_repo_index()
+
+    print("✅ Repository indexed.\n")
 
     print("\nCommands:")
     print("/debug on")
@@ -187,10 +200,14 @@ def main():
                 PIPELINE_STATE["draft_model"] = \
                     "qwen2.5-coder:1.5b"
 
+                print("\n⚡ USING LOCAL MODEL\n")
+
             else:
 
                 PIPELINE_STATE["refinement_model"] = \
                     "inclusionai/ring-2.6-1t:free"
+
+                print("\n☁️ USING CLOUD MODEL\n")
 
             updated = generate_patch(
                 prompt,
@@ -344,20 +361,23 @@ def main():
 
             end_stage("Local Draft")
 
-            print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            print("⚡ QUICK DRAFT")
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+            if PIPELINE_STATE.get("debug_mode"):
 
-            print(draft_answer)
+                print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                print("⚡ QUICK DRAFT")
+                print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+
+                print(draft_answer)
 
             # =====================================
             # CLOUD REFINEMENT
             # =====================================
 
-        if PIPELINE_STATE.get("debug_mode"):
-            print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            print("☁️ CLOUD REFINEMENT")
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+            if PIPELINE_STATE.get("debug_mode"):
+
+                print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                print("☁️ CLOUD REFINEMENT")
+                print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
             refinement_context = context + [
                 {
@@ -396,6 +416,7 @@ Requirements:
             add_message("assistant", answer)
 
             show_pipeline()
+
 
 # =====================================
 # ENTRY
