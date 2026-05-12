@@ -1,13 +1,17 @@
 import os
 import json
-import math
 import hashlib
 import ollama
 
 from pathlib import Path
 
 from tracing.debug import trace
+
 from repo.repo_state import REPO_INDEX
+
+from repo.graph_builder import (
+    build_graph
+)
 
 # =====================================
 # CONFIG
@@ -64,14 +68,14 @@ def get_embedding(text):
 
     response = ollama.embeddings(
         model=EMBEDDING_MODEL,
-        prompt=text[:6000]
+        prompt=text[:3000]
     )
 
     return response["embedding"]
 
 
 # =====================================
-# FILE SCANNING
+# SCAN REPO
 # =====================================
 
 def scan_repo():
@@ -89,7 +93,9 @@ def scan_repo():
 
             ext = Path(filename).suffix
 
-            if ext not in SUPPORTED_EXTENSIONS:
+            if ext not in \
+               SUPPORTED_EXTENSIONS:
+
                 continue
 
             path = Path(root) / filename
@@ -106,7 +112,9 @@ def scan_repo():
 
                 files.append({
                     "path": str(
-                        path.relative_to(REPO_ROOT)
+                        path.relative_to(
+                            REPO_ROOT
+                        )
                     ),
                     "content": content
                 })
@@ -118,14 +126,16 @@ def scan_repo():
 
 
 # =====================================
-# INDEX FILE
+# INDEX SINGLE FILE
 # =====================================
 
 def index_file(file_data):
 
     content = file_data["content"]
 
-    content_hash = hash_content(content)
+    content_hash = hash_content(
+        content
+    )
 
     embedding_text = f"""
 FILE NAME:
@@ -209,12 +219,34 @@ def save_index():
 
 
 # =====================================
+# BUILD REPO GRAPH
+# =====================================
+
+def build_repo_graph():
+
+    trace("Generating graph")
+
+    graph = build_graph(
+        REPO_INDEX
+    )
+
+    for path in REPO_INDEX:
+
+        REPO_INDEX[path]["graph"] = \
+            graph.get(path, [])
+
+    trace("Graph synced")
+
+
+# =====================================
 # BUILD / UPDATE INDEX
 # =====================================
 
 def build_repo_index():
 
-    trace("Building repository index")
+    trace(
+        "Building repository index"
+    )
 
     load_index()
 
@@ -222,9 +254,21 @@ def build_repo_index():
 
     updated = 0
 
+    existing_paths = set(
+        REPO_INDEX.keys()
+    )
+
+    current_paths = set()
+
+    # =====================================
+    # INDEX FILES
+    # =====================================
+
     for file_data in files:
 
         path = file_data["path"]
+
+        current_paths.add(path)
 
         content_hash = hash_content(
             file_data["content"]
@@ -232,9 +276,13 @@ def build_repo_index():
 
         existing = REPO_INDEX.get(path)
 
-        # unchanged
+        # =====================================
+        # SKIP UNCHANGED
+        # =====================================
+
         if existing and \
-           existing["hash"] == content_hash:
+           existing["hash"] == \
+           content_hash:
 
             continue
 
@@ -245,6 +293,31 @@ def build_repo_index():
         )
 
         updated += 1
+
+    # =====================================
+    # REMOVE DELETED FILES
+    # =====================================
+
+    deleted = existing_paths - current_paths
+
+    for path in deleted:
+
+        trace(
+            f"Removing deleted file: "
+            f"{path}"
+        )
+
+        del REPO_INDEX[path]
+
+    # =====================================
+    # REBUILD GRAPH
+    # =====================================
+
+    build_repo_graph()
+
+    # =====================================
+    # SAVE
+    # =====================================
 
     save_index()
 

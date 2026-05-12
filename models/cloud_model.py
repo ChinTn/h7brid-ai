@@ -8,7 +8,7 @@ import os
 from tracing.debug import trace
 
 load_dotenv()
-
+print("CLOUD API KEY:", OPENROUTER_API_KEY)
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
