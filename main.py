@@ -8,12 +8,16 @@ from tracing.debug import (
     end_stage
 )
 
-
 from repo.repo_indexer import (
     build_repo_index
 )
 
-from memory.memory_manager import get_current_mode
+from memory.memory_manager import (
+    get_current_mode,
+    add_message,
+    recent_messages,
+    conversation_summary
+)
 
 from models.classifier import classify_prompt
 from models.local_model import local_chat
@@ -21,12 +25,6 @@ from models.cloud_model import cloud_chat
 
 from repo.context_builder import build_context
 from repo.retrieval import retrieve_relevant_files
-
-from memory.memory_manager import (
-    add_message,
-    recent_messages,
-    conversation_summary
-)
 
 from editing.patch_generator import generate_patch
 from editing.diff_viewer import show_diff
@@ -158,7 +156,9 @@ def main():
 
             start_stage("Repo Retrieval")
 
-            relevant = retrieve_relevant_files(prompt)
+            relevant = retrieve_relevant_files(
+                prompt
+            )
 
             end_stage("Repo Retrieval")
 
@@ -169,17 +169,17 @@ def main():
 
             if not relevant:
 
-                print("\nNo relevant file found.\n")
+                print(
+                    "\nNo relevant files found.\n"
+                )
 
                 continue
 
-            target = relevant[0]
+            print("\n📂 Retrieved Files:\n")
 
-            PIPELINE_STATE["edited_file"] = \
-                target["path"]
+            for file in relevant:
 
-            print(f"\n📄 Target File:")
-            print(target["path"])
+                print(f"- {file['path']}")
 
             # =====================================
             # PATCH GENERATION
@@ -195,36 +195,58 @@ def main():
             PIPELINE_STATE["classifier_model"] = \
                 "qwen2.5-coder:1.5b (local)"
 
-            if decision == "SIMPLE":
+            PIPELINE_STATE["refinement_model"] = \
+                "inclusionai/ring-2.6-1t:free"
 
-                PIPELINE_STATE["draft_model"] = \
-                    "qwen2.5-coder:1.5b"
+            print("\n☁️ USING CLOUD MODEL\n")
 
-                print("\n⚡ USING LOCAL MODEL\n")
-
-            else:
-
-                PIPELINE_STATE["refinement_model"] = \
-                    "inclusionai/ring-2.6-1t:free"
-
-                print("\n☁️ USING CLOUD MODEL\n")
-
-            updated = generate_patch(
+            updated_files = generate_patch(
                 prompt,
-                target
+                relevant,
+                use_cloud=True
             )
 
             end_stage("Patch Generation")
 
+            if not updated_files:
+
+                print(
+                    "\n❌ No valid patches generated.\n"
+                )
+
+                continue
+
             # =====================================
-            # SHOW DIFF
+            # SHOW DIFFS
             # =====================================
 
-            show_diff(
-                target["content"],
-                updated,
-                target["path"]
-            )
+            for updated_file in updated_files:
+
+                path = updated_file["path"]
+
+                original = None
+
+                for file in relevant:
+
+                    if file["path"] == path:
+
+                        original = file["content"]
+
+                        break
+
+                if original is None:
+
+                    continue
+
+                print(
+                    f"\n📄 Target File:\n{path}\n"
+                )
+
+                show_diff(
+                    original,
+                    updated_file["content"],
+                    path
+                )
 
             # =====================================
             # SHOW PIPELINE
@@ -237,25 +259,35 @@ def main():
             # =====================================
 
             confirm = input(
-                "\nApply changes? (y/n): "
-            ).strip()
+                "\nApply ALL changes? (y/n): "
+            ).strip().lower()
 
-            if confirm.lower() == "y":
+            if confirm != "y":
 
-                start_stage("File Write")
-
-                apply_changes(
-                    target["path"],
-                    updated
+                print(
+                    "\n❌ Changes cancelled.\n"
                 )
 
-                end_stage("File Write")
+                continue
 
-                print("\n✅ Changes applied.\n")
+            # =====================================
+            # APPLY FILES
+            # =====================================
 
-            else:
+            start_stage("File Write")
 
-                print("\n❌ Changes cancelled.\n")
+            for updated_file in updated_files:
+
+                apply_changes(
+                    updated_file["path"],
+                    updated_file["content"]
+                )
+
+            end_stage("File Write")
+
+            print(
+                "\n✅ All changes applied.\n"
+            )
 
             continue
 

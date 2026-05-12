@@ -1,26 +1,31 @@
 from openai import OpenAI
-from dotenv import load_dotenv
+
 from config import (
     OPENROUTER_API_KEY,
     CLOUD_MODEL
 )
-import os
+
 from tracing.debug import trace
 
-load_dotenv()
-print("CLOUD API KEY:", OPENROUTER_API_KEY)
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
-)
 
 # =====================================
-# NORMAL CLOUD CHAT
+# CLOUD CHAT
 # =====================================
 
 def cloud_chat(messages):
 
     trace("Starting cloud streaming")
+
+    print("\n☁️ USING CLOUD MODEL\n")
+
+    # =====================================
+    # CREATE CLIENT RUNTIME
+    # =====================================
+
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=str(OPENROUTER_API_KEY)
+    )
 
     stream = client.chat.completions.create(
         model=CLOUD_MODEL,
@@ -35,11 +40,17 @@ def cloud_chat(messages):
 
         try:
 
-            content = chunk.choices[0].delta.content
+            content = \
+                chunk.choices[0] \
+                .delta.content
 
             if content:
 
-                print(content, end="", flush=True)
+                print(
+                    content,
+                    end="",
+                    flush=True
+                )
 
                 full_response += content
 
@@ -48,6 +59,8 @@ def cloud_chat(messages):
 
     print()
 
-    trace("Cloud streaming completed")
+    trace(
+        "Cloud streaming completed"
+    )
 
     return full_response
