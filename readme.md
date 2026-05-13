@@ -39,6 +39,11 @@ The goal of the project is to experiment with modern AI infrastructure concepts 
 
 ---
 
+## Understanding the Project
+
+For deeper architecture and workflow explanation, read [understanding.md](./understanding.md)
+
+---
 # Architecture
 
 ```text
