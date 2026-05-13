@@ -58,6 +58,39 @@ def is_edit_request(prompt):
 
 
 # =====================================
+# LOCAL FAILURE DETECTION
+# =====================================
+
+def local_failed(answer):
+
+    if not answer:
+        return True
+
+    stripped = answer.strip()
+
+    if len(stripped) < 30:
+        return True
+
+    suspicious_patterns = [
+        "obj['response']",
+        "undefined",
+        "null",
+        "none",
+        "{}",
+        "[]"
+    ]
+
+    lowered = stripped.lower()
+
+    for pattern in suspicious_patterns:
+
+        if pattern in lowered:
+            return True
+
+    return False
+
+
+# =====================================
 # MAIN
 # =====================================
 
@@ -84,15 +117,14 @@ def main():
 
             prompt = input("\nYou > ").strip()
 
-        except (EOFError, KeyboardInterrupt):
+        except (
+            EOFError,
+            KeyboardInterrupt
+        ):
 
             print("\nExiting.")
 
             break
-
-        # =====================================
-        # RESET PIPELINE
-        # =====================================
 
         reset_pipeline()
 
@@ -103,7 +135,10 @@ def main():
         # EXIT
         # =====================================
 
-        if prompt.lower() in {"exit", "quit"}:
+        if prompt.lower() in {
+            "exit",
+            "quit"
+        }:
 
             print("\nGoodbye.\n")
 
@@ -117,7 +152,9 @@ def main():
 
             set_debug(True)
 
-            print("\nDebug tracing enabled.\n")
+            print(
+                "\nDebug tracing enabled.\n"
+            )
 
             continue
 
@@ -129,21 +166,28 @@ def main():
 
             set_debug(False)
 
-            print("\nDebug tracing disabled.\n")
+            print(
+                "\nDebug tracing disabled.\n"
+            )
 
             continue
 
         # =====================================
-        # MEMORY UPDATE
+        # MEMORY
         # =====================================
 
-        add_message("user", prompt)
+        add_message(
+            "user",
+            prompt
+        )
 
-        PIPELINE_STATE["recent_message_count"] = \
-            len(recent_messages)
+        PIPELINE_STATE[
+            "recent_message_count"
+        ] = len(recent_messages)
 
-        PIPELINE_STATE["summary_active"] = \
-            bool(conversation_summary)
+        PIPELINE_STATE[
+            "summary_active"
+        ] = bool(conversation_summary)
 
         # =====================================
         # FILE EDIT FLOW
@@ -151,17 +195,25 @@ def main():
 
         if is_edit_request(prompt):
 
-            trace("Detected repository edit request")
+            trace(
+                "Detected repository edit request"
+            )
 
-            start_stage("Repo Retrieval")
+            start_stage(
+                "Repo Retrieval"
+            )
 
             relevant = retrieve_relevant_files(
                 prompt
             )
 
-            end_stage("Repo Retrieval")
+            end_stage(
+                "Repo Retrieval"
+            )
 
-            PIPELINE_STATE["retrieved_files"] = [
+            PIPELINE_STATE[
+                "retrieved_files"
+            ] = [
                 file["path"]
                 for file in relevant
             ]
@@ -174,38 +226,25 @@ def main():
 
                 continue
 
-            print("\n📂 Retrieved Files:\n")
+            print(
+                "\n📂 Retrieved Files:\n"
+            )
 
             for file in relevant:
 
-                print(f"- {file['path']}")
+                print(
+                    f"- {file['path']}"
+                )
 
-            # =====================================
-            # PATCH GENERATION
-            # =====================================
-
-            start_stage("Patch Generation")
-
-            decision = classify_prompt(prompt)
-
-            PIPELINE_STATE["router_decision"] = \
-                decision
-
-            PIPELINE_STATE["classifier_model"] = \
-                "qwen2.5-coder:1.5b (local)"
-
-            PIPELINE_STATE["refinement_model"] = \
-                "inclusionai/ring-2.6-1t:free"
-
-            print("\n☁️ USING CLOUD MODEL\n")
+            print(
+                "\n☁️ USING CLOUD MODEL\n"
+            )
 
             updated_files = generate_patch(
                 prompt,
                 relevant,
                 use_cloud=True
             )
-
-            end_stage("Patch Generation")
 
             if not updated_files:
 
@@ -215,13 +254,11 @@ def main():
 
                 continue
 
-            # =====================================
-            # SHOW DIFFS
-            # =====================================
-
             for updated_file in updated_files:
 
-                path = updated_file["path"]
+                path = updated_file[
+                    "path"
+                ]
 
                 original = None
 
@@ -229,12 +266,13 @@ def main():
 
                     if file["path"] == path:
 
-                        original = file["content"]
+                        original = file[
+                            "content"
+                        ]
 
                         break
 
                 if original is None:
-
                     continue
 
                 print(
@@ -243,19 +281,13 @@ def main():
 
                 show_diff(
                     original,
-                    updated_file["content"],
+                    updated_file[
+                        "content"
+                    ],
                     path
                 )
 
-            # =====================================
-            # SHOW PIPELINE
-            # =====================================
-
             show_pipeline()
-
-            # =====================================
-            # APPLY CONFIRMATION
-            # =====================================
 
             confirm = input(
                 "\nApply ALL changes? (y/n): "
@@ -269,11 +301,9 @@ def main():
 
                 continue
 
-            # =====================================
-            # APPLY FILES
-            # =====================================
-
-            start_stage("File Write")
+            start_stage(
+                "File Write"
+            )
 
             for updated_file in updated_files:
 
@@ -282,7 +312,9 @@ def main():
                     updated_file["content"]
                 )
 
-            end_stage("File Write")
+            end_stage(
+                "File Write"
+            )
 
             print(
                 "\n✅ All changes applied.\n"
@@ -294,159 +326,129 @@ def main():
         # NORMAL CHAT FLOW
         # =====================================
 
-        trace("Starting normal chat flow")
+        trace(
+            "Starting normal chat flow"
+        )
 
-        # =====================================
-        # CLASSIFIER
-        # =====================================
+        start_stage(
+            "AI Classification"
+        )
 
-        start_stage("AI Classification")
+        decision = classify_prompt(
+            prompt
+        )
 
-        decision = classify_prompt(prompt)
+        end_stage(
+            "AI Classification"
+        )
 
-        end_stage("AI Classification")
+        PIPELINE_STATE[
+            "router_decision"
+        ] = decision
 
-        PIPELINE_STATE["router_decision"] = \
-            decision
+        print(
+            f"\n🧠 ROUTER DECISION:"
+        )
 
-        PIPELINE_STATE["classifier_model"] = \
-            "qwen2.5-coder:1.5b (local)"
-
-        # =====================================
-        # CONTEXT BUILDING
-        # =====================================
-
-        start_stage("Context Retrieval")
-
-        context = build_context(prompt)
-
-        PIPELINE_STATE["current_mode"] = \
-            get_current_mode()
-
-        end_stage("Context Retrieval")
-
-        # =====================================
-        # ROUTER DISPLAY
-        # =====================================
-
-        print(f"\n🧠 ROUTER DECISION:")
         print(decision)
 
         # =====================================
-        # SIMPLE → LOCAL
+        # CONTEXT
         # =====================================
 
-        if decision == "SIMPLE":
+        start_stage(
+            "Context Retrieval"
+        )
 
-            PIPELINE_STATE["draft_model"] = \
-                "qwen2.5-coder:1.5b"
+        context = build_context(
+            prompt
+        )
 
-            start_stage("Local Inference")
+        end_stage(
+            "Context Retrieval"
+        )
 
-            response = local_chat(
-                context,
-                stream=False
+        # =====================================
+        # LOCAL FIRST
+        # =====================================
+
+        print(
+            "\n⚡ USING LOCAL MODEL\n"
+        )
+
+        start_stage(
+            "Local Inference"
+        )
+
+        response = local_chat(
+            context,
+            stream=False
+        )
+
+        answer = response[
+            "message"
+        ][
+            "content"
+        ]
+
+        end_stage(
+            "Local Inference"
+        )
+
+        # =====================================
+        # LOCAL FAILURE
+        # =====================================
+
+        if local_failed(answer):
+
+            print(
+                "\n⚠️ Local model failed."
             )
 
-            answer = response["message"]["content"]
-
-            end_stage("Local Inference")
-
-            print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            print("🤖 RESPONSE")
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-
-            print(answer)
-
-            add_message("assistant", answer)
-
-            show_pipeline()
-
-            continue
-
-        # =====================================
-        # COMPLEX → HYBRID DRAFT + CLOUD
-        # =====================================
-
-        else:
-
-            PIPELINE_STATE["draft_model"] = \
-                "qwen2.5-coder:1.5b"
-
-            PIPELINE_STATE["refinement_model"] = \
-                "inclusionai/ring-2.6-1t:free"
-
-            # =====================================
-            # LOCAL DRAFT
-            # =====================================
-
-            start_stage("Local Draft")
-
-            draft_response = local_chat(
-                context,
-                stream=False
+            print(
+                "☁️ Escalating to cloud...\n"
             )
 
-            draft_answer = \
-                draft_response["message"]["content"]
+            PIPELINE_STATE[
+                "cloud_fallback"
+            ] = True
 
-            end_stage("Local Draft")
-
-            if PIPELINE_STATE.get("debug_mode"):
-
-                print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                print("⚡ QUICK DRAFT")
-                print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-
-                print(draft_answer)
-
-            # =====================================
-            # CLOUD REFINEMENT
-            # =====================================
-
-            if PIPELINE_STATE.get("debug_mode"):
-
-                print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                print("☁️ CLOUD REFINEMENT")
-                print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-
-            refinement_context = context + [
-                {
-                    "role": "assistant",
-                    "content": draft_answer
-                },
-                {
-                    "role": "user",
-                    "content": """
-Improve and refine the previous answer.
-
-Requirements:
-- improve depth
-- improve correctness
-- improve architecture quality
-- improve reasoning
-- keep useful parts
-"""
-                }
-            ]
-
-            start_stage("Cloud Refinement")
+            start_stage(
+                "Cloud Fallback"
+            )
 
             answer = cloud_chat(
-                refinement_context
+                context
             )
 
-            end_stage("Cloud Refinement")
+            end_stage(
+                "Cloud Fallback"
+            )
 
-            print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            print("🤖 FINAL RESPONSE")
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+        # =====================================
+        # FINAL RESPONSE
+        # =====================================
 
-            print(answer)
+        print(
+            "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        )
 
-            add_message("assistant", answer)
+        print(
+            "🤖 RESPONSE"
+        )
 
-            show_pipeline()
+        print(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        )
+
+        print(answer)
+
+        add_message(
+            "assistant",
+            answer
+        )
+
+        show_pipeline()
 
 
 # =====================================
