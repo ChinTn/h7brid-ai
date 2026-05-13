@@ -2,3 +2,6 @@ __pycache__/
 *.py[cod]
 .env
 debug_key.py
+data/repo_index.json
+data/file_embeddings_cache.json
+data/prototypes_cache.json
