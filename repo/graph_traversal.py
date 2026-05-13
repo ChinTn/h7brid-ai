@@ -6,7 +6,7 @@ from tracing.debug import trace
 
 MAX_GRAPH_DEPTH = 2
 
-MAX_TOTAL_GRAPH_FILES = 15
+MAX_TOTAL_GRAPH_FILES = 8
 
 MAX_NEIGHBOURS_PER_NODE = 4
 
