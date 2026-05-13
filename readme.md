@@ -1,168 +1,296 @@
+# README.md
+
 # Hybrid Repo AI Agent
 
-A repository-aware AI assistant for code understanding, retrieval, and automated patch generation.
+A prototype repository-aware AI orchestration system designed for codebase understanding, semantic retrieval, graph-based context expansion, repository-level reasoning, and multi-file code editing.
 
-This project combines local and cloud AI models, semantic retrieval, repository indexing, and file-editing workflows to support natural language code requests and repository edits.
+The project started from a simple issue:
+local coding models became very slow and unreliable while handling repository-level tasks.
 
-## 🚀 What it does
+Instead of only scaling model size, the architecture evolved toward:
+- hybrid local + cloud inference
+- repository indexing
+- semantic retrieval
+- graph traversal
+- reranking
+- context orchestration
+- multi-file patch generation
+- repository memory systems
 
-- Indexes repository files with embeddings using `ollama`
-- Classifies user prompts into general chat or repo-aware editing mode
-- Retrieves relevant files using semantic similarity
-- Generates code patches using a cloud model
-- Shows diffs and optionally applies changes to files
-- Stores recent conversation state for improved context
+The goal of the project is to experiment with modern AI infrastructure concepts used in repository-level AI systems.
 
-## 📦 Key features
+---
 
-- Repo indexing with cached embeddings
-- Semantic retrieval for relevant file selection
-- Local and cloud model support
-- Edit request detection and patch workflow
-- Diff preview before file updates
-- Debug tracing with `/debug on` and `/debug off`
+# Features
 
-## 📁 Repository structure
+- Hybrid local + cloud orchestration
+- Semantic repository retrieval
+- Repository indexing with embeddings
+- Weighted graph traversal
+- DFS-based context expansion
+- Retrieval reranking
+- Multi-file patch generation
+- Repository-aware prompting
+- Incremental indexing concepts
+- Persistent repository memory
+- Debug tracing pipelines
+- Context-building orchestration
+- Local-first inference strategy
 
-- main.py — entry point and command loop
-- config.py — configuration, environment loading, and model settings
-- requirements.txt — Python dependency list
-- readme.md — project documentation
+---
 
-- data
-  - `repo_index.json` — cached repository embeddings and indexed file metadata
-  - `prototypes.json` — prototypes used for prompt mode classification
-  - `prototypes_cache.json` — cached embedded prototypes
+# Architecture
 
-- editing
-  - patch_generator.py — builds prompts and parses file patch responses
-  - diff_viewer.py — prints unified diffs between original and updated content
-  - file_writer.py — writes file changes and syncs the index
+```text
+User Prompt
+    ↓
+SIMPLE vs COMPLEX Classification
+    ↓
+Semantic Retrieval
+    ↓
+Graph Expansion
+    ↓
+Reranking
+    ↓
+Context Builder
+    ↓
+Local Model OR Cloud Model
+    ↓
+Response / Patch Generation
+```
 
-- memory
-  - memory_manager.py — tracks recent chat messages and conversation state
+---
 
-- models
-  - `classifier.py` — prompt classification logic
-  - cloud_model.py — OpenRouter cloud chat integration
-  - local_model.py — local Ollama chat wrapper
+# Project Structure
 
-- repo
-  - repo_indexer.py — repository scanning, indexing, loading, and saving
-  - repo_state.py — in-memory repository index state
-  - `repo_summary.py` — repository summary utilities
-  - `graph_builder.py` — repo graph builder
-  - `graph_traversal.py` — graph traversal helpers
-  - retrieval.py — semantic file retrieval
-  - mode_classifier.py — embedding-based mode classification
-  - context_builder.py — builds prompt context for the AI models
+```text
+hybrid-agent/
+│
+├── data/
+│   ├── file_embeddings_cache.json
+│   ├── prototypes_cache.json
+│   ├── prototypes.json
+│   ├── repo_index.json
+│
+├── editing/
+│   ├── __init__.py
+│   ├── diff_viewer.py
+│   ├── file_writer.py
+│   ├── patch_generator.py
+│
+├── memory/
+│   ├── __init__.py
+│   ├── memory_manager.py
+│
+├── models/
+│   ├── __init__.py
+│   ├── classifier.py
+│   ├── cloud_model.py
+│   ├── local_model.py
+│
+├── repo/
+│   ├── __init__.py
+│   ├── context_builder.py
+│   ├── graph_builder.py
+│   ├── graph_traversal.py
+│   ├── mode_classifier.py
+│   ├── repo_indexer.py
+│   ├── repo_state.py
+│   ├── repo_summary.py
+│   ├── reranker.py
+│   ├── retrieval.py
+│   ├── scanner.py
+│
+├── tracing/
+│   ├── __init__.py
+│   ├── debug.py
+│
+├── .env
+├── .gitignore
+├── config.py
+├── debug_key.py
+├── main.py
+├── README.md
+├── requirements.txt
+```
 
-- tracing
-  - `debug.py` — tracing utilities for pipeline debugging
+---
 
-## ⚙️ Prerequisites
+# Dependencies
 
-- Python 3.11+ recommended
-- `ollama` installed and configured for the local model
-- Internet access for OpenRouter cloud model usage
-- A valid `OPENROUTER_API_KEY`
+| Dependency | Purpose |
+|---|---|
+| ollama | Local LLM inference |
+| openai | OpenRouter/OpenAI cloud inference |
+| sentence-transformers | Semantic embeddings |
+| python-dotenv | Environment variable loading |
 
-## 🛠 Installation
+---
 
-1. Clone the repository or download the project files.
+# Local + Cloud Models
 
-2. Create and activate a Python virtual environment:
+## Local Model
+Used for:
+- lightweight reasoning
+- faster responses
+- lower latency tasks
+- smaller repository operations
+
+## Cloud Model
+Used for:
+- deeper reasoning
+- architecture-level understanding
+- larger repository tasks
+- complex multi-file operations
+
+---
+
+# Retrieval Pipeline
+
+The retrieval system combines:
+- semantic retrieval
+- graph expansion
+- weighted traversal
+- reranking
+- structured context building
+
+This improves:
+- repository awareness
+- contextual relevance
+- multi-file understanding
+- architectural coherence
+
+---
+
+# Editing Pipeline
+
+The editing system supports:
+- repository-aware patch generation
+- multi-file modification concepts
+- diff visualization
+- structured file updates
+
+---
+
+# Installation
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/your-username/hybrid-agent.git
+cd hybrid-agent
+```
+
+---
+
+## 2. Create Virtual Environment
+
+### Windows
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 ```
 
-3. Install dependencies:
+### Linux / Mac
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+---
+
+## 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Create a .env file in the project root with:
+---
 
-```text
-OPENROUTER_API_KEY=your_openrouter_api_key_here
+## 4. Install Ollama
+
+Download and install Ollama from:
+
+https://ollama.com/download
+
+After installation, pull the local model:
+
+```bash
+ollama pull qwen2.5-coder:1.5b
 ```
 
-> config.py requires this value on startup. The app will raise an error if `OPENROUTER_API_KEY` is not set.
+You can replace this model later inside `config.py`.
 
-## ▶️ Running the agent
+---
 
-Start the application from the project root:
+## 5. Create `.env` File
+
+Create a `.env` file in the root directory:
+
+```env
+OPENROUTER_API_KEY=your_openrouter_api_key
+```
+
+---
+
+## 6. Run the Project
 
 ```bash
 python main.py
 ```
 
-The interactive prompt supports:
+---
 
-- normal chat queries
-- edit requests such as `fix bug`, `update file`, `modify file`, `rewrite file`, `patch`, etc.
-- `/debug on` to enable pipeline tracing
-- `/debug off` to disable tracing
-- `exit` or `quit` to leave the app
+# First Startup
 
-## 🧠 How it works
+On first startup the system will:
+- scan the repository
+- generate embeddings
+- build repository memory
+- create retrieval indexes
 
-1. main.py starts the app and builds the repository index.
-2. User input is classified and stored in memory.
-3. If an edit request is detected, the app:
-   - retrieves relevant files using semantic search
-   - generates patches via a cloud model
-   - displays diffs
-   - prompts the user to apply changes
-4. If not an edit request, the app can still handle general chat and repository-aware prompts through the context builder.
-
-## 🔧 Configuration details
-
-- config.py sets:
-  - `LOCAL_MODEL`: local Ollama model name
-  - `CLOUD_MODEL`: cloud model used through OpenRouter
-  - `OPENROUTER_API_KEY`: loaded from .env
-  - `ALLOWED_EXTENSIONS`: supported file types for indexing and retrieval
-  - `MAX_RECENT_MESSAGES`: controls chat history length
-
-- repo_indexer.py scans the repo, builds embeddings, and stores the index in repo_index.json
-- mode_classifier.py uses prototype prompts to decide whether a user request is repository-aware or general chat
-- patch_generator.py builds edit prompts and parses multi-file patch responses
-- file_writer.py applies updates and syncs the repository index
-
-## 💡 Notes
-
-- The local model (`ollama`) and cloud model (`openai` via OpenRouter) are both used; the edit workflow currently uses the cloud model for patch generation.
-- Cached data files in data speed up startup and classification.
-- The app is designed for code repositories and supports common code file formats plus markdown and text files.
-
-## 🧪 Recommended workflow
-
-1. Run `python main.py`
-2. Enter a request such as `fix bug in file_writer.py` or `update the prompt parser`
-3. Review the retrieved file list
-4. Inspect the diff output
-5. Confirm whether to apply the patch
-
-## 📌 Troubleshooting
-
-- If the app fails to start with an API key error, verify .env exists and contains `OPENROUTER_API_KEY`.
-- If local Ollama calls fail, ensure `ollama` is installed and the `LOCAL_MODEL` name is valid.
-- If repository indexing is slow, remove large or irrelevant directories from repo_indexer.py ignore rules.
-
-## 📚 Further improvements
-
-This project can be extended by:
-
-- adding more robust parsing for multi-file patch outputs
-- improving edit request detection with a learned classifier
-- supporting additional model providers
-- adding a web or GUI frontend
-- making the repo graph traversal fully integrated into retrieval
+This may take some time depending on repository size.
 
 ---
 
-Thank you for using the Hybrid Repo AI Agent.
+# Notes
+
+- Local inference uses Ollama
+- Cloud inference uses OpenRouter
+- Runtime cache files are generated automatically
+- Repository indexes are stored locally and should not be committed to git
+
+---
+
+# Recommended
+
+Recommended Python version:
+
+```text
+Python 3.10+
+```
+
+---
+
+# Current Status
+
+This project is still experimental and under active development.
+
+The system is focused on learning and experimenting with:
+- AI orchestration systems
+- retrieval pipelines
+- repository-level reasoning
+- graph-based context expansion
+- multi-file AI editing systems
+
+Future improvements may include:
+- adaptive retrieval
+- AST-aware patching
+- planner-agent systems
+- vector databases
+- async orchestration
+- smarter graph traversal
+- dynamic retrieval policies
+- improved reranking systems
